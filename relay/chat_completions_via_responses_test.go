@@ -10,6 +10,7 @@ import (
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/constant"
+	codexchannel "github.com/QuantumNous/new-api/relay/channel/codex"
 	openaichannel "github.com/QuantumNous/new-api/relay/channel/openai"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
 	relayconstant "github.com/QuantumNous/new-api/relay/constant"
@@ -153,6 +154,85 @@ func TestTextRequestViaResponsesConvertsClaudeDirectly(t *testing.T) {
 	require.NoError(t, common.Unmarshal(recorder.Body.Bytes(), &response))
 	require.Len(t, response.Content, 1)
 	assert.Equal(t, "ok", response.Content[0].GetText())
+}
+
+func TestRelayResponsesRequestForcesCodexUpstreamStreamForNonStreamingChatClient(t *testing.T) {
+	type capturedRequest struct {
+		path   string
+		accept string
+		body   []byte
+	}
+	captured := make(chan capturedRequest, 1)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		captured <- capturedRequest{
+			path:   r.URL.Path,
+			accept: r.Header.Get("Accept"),
+			body:   body,
+		}
+		w.Header().Set("Content-Type", "text/event-stream")
+		_, _ = w.Write([]byte("data: {\"type\":\"response.output_text.delta\",\"delta\":\"OK\"}\n" +
+			"data: {\"type\":\"response.done\",\"response\":{\"id\":\"resp_1\",\"model\":\"gpt-5.5\",\"status\":\"completed\",\"usage\":{\"input_tokens\":2,\"output_tokens\":1,\"total_tokens\":3}}}\n" +
+			"data: [DONE]\n"))
+	}))
+	defer server.Close()
+
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil)
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	info := &relaycommon.RelayInfo{
+		RelayMode:       relayconstant.RelayModeChatCompletions,
+		RelayFormat:     relaytypes.RelayFormatOpenAI,
+		OriginModelName: "gpt-5.5",
+		IsStream:        false,
+		ChannelMeta: &relaycommon.ChannelMeta{
+			ChannelType:       constant.ChannelTypeCodex,
+			ChannelBaseUrl:    server.URL,
+			ApiKey:            `{"access_token":"test-token","account_id":"test-account"}`,
+			UpstreamModelName: "gpt-5.5",
+		},
+	}
+	adaptor := &codexchannel.Adaptor{}
+	adaptor.Init(info)
+	clientStream := false
+	request := &dto.OpenAIResponsesRequest{
+		Model:  "gpt-5.5",
+		Input:  json.RawMessage(`[{"role":"user","content":[{"type":"input_text","text":"Reply exactly OK."}]}]`),
+		Stream: &clientStream,
+	}
+
+	usage, apiErr := relayResponsesRequest(c, info, adaptor, request, false)
+
+	require.Nil(t, apiErr)
+	require.NotNil(t, usage)
+	assert.Equal(t, 3, usage.TotalTokens)
+	assert.False(t, info.IsStream)
+
+	upstream := <-captured
+	assert.Equal(t, "/backend-api/codex/responses", upstream.path)
+	assert.Equal(t, "text/event-stream", upstream.accept)
+	var upstreamBody map[string]any
+	require.NoError(t, common.Unmarshal(upstream.body, &upstreamBody))
+	assert.Equal(t, true, upstreamBody["stream"])
+
+	var response map[string]any
+	require.NoError(t, common.Unmarshal(recorder.Body.Bytes(), &response))
+	assert.Equal(t, "chat.completion", response["object"])
+	choices, ok := response["choices"].([]any)
+	require.True(t, ok)
+	require.Len(t, choices, 1)
+	choice, ok := choices[0].(map[string]any)
+	require.True(t, ok)
+	message, ok := choice["message"].(map[string]any)
+	require.True(t, ok)
+	assert.Equal(t, "OK", message["content"])
 }
 
 func TestApplySystemPromptIfNeededSkipsToolLoadingMessages(t *testing.T) {
