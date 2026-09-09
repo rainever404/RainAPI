@@ -1,5 +1,5 @@
 param(
-    [string]$ImageTag = 'rainapi:v1.0.0-rc.23-rain.1'
+    [string]$ImageTag = 'rainapi:v1.0.0-rc.36-rain.1'
 )
 
 $ErrorActionPreference = 'Stop'
