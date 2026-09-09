@@ -7,6 +7,7 @@ INSERT INTO options (key, value)
 VALUES
   ('SystemName', 'RainAPI'),
   ('DataExportDefaultTime', 'day'),
+  ('global.chat_completions_to_responses_policy', '{"enabled":true,"all_channels":false,"channel_ids":[1],"model_patterns":["^gpt-5.*$"]}'),
   ('GroupRatio', '{"All Model":1,"Codex专用":1,"图像生成":0.7}'),
   ('UserUsableGroups', '{}'),
   ('ModelPrice', '{}'),

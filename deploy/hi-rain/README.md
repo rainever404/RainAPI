@@ -23,6 +23,10 @@ in their current managed storage.
   rolling presets. Custom dates run from the start of the first local day to
   the end of the last local day.
 - Dashboard time granularity defaults to daily.
+- Codex channel 1 accepts OpenAI-compatible `/v1/chat/completions` requests by
+  converting them to Responses upstream. Codex is always called as a stream;
+  non-streaming clients receive a buffered standard Chat Completions JSON
+  response.
 - Group ratios, model ratios, image ratios, user group assignments, and
   non-sensitive channel routing fields are reconciled by
   `apply-production-settings.sql`.
