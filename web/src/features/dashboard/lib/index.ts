@@ -34,6 +34,11 @@ export {
 } from './api-info'
 export { processChartData, processUserChartData } from './charts'
 export {
+  filterUserStatisticsData,
+  filterUserStatisticsDataByUsers,
+  getUserStatisticsUsernames,
+} from './user-statistics-filter'
+export {
   buildDashboardFlowData,
   buildFlowSankeySpec,
   flowNodeFilterFromSankeyDatum,

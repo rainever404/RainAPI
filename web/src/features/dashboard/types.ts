@@ -206,8 +206,11 @@ export interface DashboardChartPreferences {
 // switching between dashboard sub-sections, matching the model/flow filters.
 export interface UserChartsFilters {
   timeGranularity: TimeGranularity
-  selectedRange: number
+  selectedRange: number | 'custom'
   topUserLimit: number
+  customStartDate?: Date
+  customEndDate?: Date
+  selectedUsers?: string[]
 }
 
 // ============================================================================
