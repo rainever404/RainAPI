@@ -174,7 +174,6 @@ func TestRelayResponsesRequestForcesCodexUpstreamStreamForNonStreamingChatClient
 			accept: r.Header.Get("Accept"),
 			body:   body,
 		}
-		w.Header().Set("Content-Type", "text/event-stream")
 		_, _ = w.Write([]byte("data: {\"type\":\"response.output_text.delta\",\"delta\":\"OK\"}\n" +
 			"data: {\"type\":\"response.done\",\"response\":{\"id\":\"resp_1\",\"model\":\"gpt-5.5\",\"status\":\"completed\",\"usage\":{\"input_tokens\":2,\"output_tokens\":1,\"total_tokens\":3}}}\n" +
 			"data: [DONE]\n"))
