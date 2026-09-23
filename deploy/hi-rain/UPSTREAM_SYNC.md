@@ -15,6 +15,8 @@
   以及 rc.40 后的 3 个主线提交。
 - 合并提交：`dc7f6b631baaab6927c1f4e2b8c154ab1d452620`。
 - 发布版本：`v1.0.0-rc.40-rain.1`。
+- 发布代码及验证记录已推送 `origin/master`，核对提交为
+  `149ad148178bd7479ac497556c0da3b2f9f5727d`；最终进度记录随同名版本标签保存。
 - 合并前先用 `09978f8e1` 保存已确认的 GPT-6 定价、Preview 路由和安装脚本配置。
 - 唯一文本冲突为 `web/src/features/dashboard/components/users/user-charts.tsx`：
   保留 RainAPI 的用户过滤、多选、日期范围，并接入上游统一接口错误处理。
