@@ -27,6 +27,17 @@ in their current managed storage.
   converting them to Responses upstream. Codex is always called as a stream;
   non-streaming clients receive a buffered standard Chat Completions JSON
   response.
+- Channel 1 serves `gpt-6-sol` (including the compact endpoint) to `Codex专用`
+  and `All Model`. Channel 4, named `Preview`, serves `gpt-6-astra` only to
+  `Preview` and `All Model`. `Codex专用` cannot select `Preview` or route Astra.
+  Channel 4 reuses the existing Codex account credentials as requested; they
+  remain production data and are never included in this repository.
+- `openai-standard-pricing.json` records the ten models in the owner's
+  2026-09-23 pricing screenshot, in USD per million tokens. The deployed
+  expressions include cache reads, supported cache writes, and whole-request
+  long-context pricing above 272,000 input tokens. These explicit expression
+  settings take precedence over the retained legacy ratio settings. Existing
+  custom image-channel prices remain unchanged.
 - Group ratios, model ratios, image ratios, user group assignments, and
   non-sensitive channel routing fields are reconciled by
   `apply-production-settings.sql`.
@@ -56,3 +67,16 @@ From the repository root, the standard local image build is:
 chcp 65001 > $null
 & '.\deploy\hi-rain\build-image.ps1'
 ```
+
+## Codex configuration installers
+
+`codex/install.ps1` and `codex/install.sh` are the files served from
+`https://api.hi-rain.com/codex/`. Both set `model` and `review_model` to
+`gpt-6-sol`. The extensionless `/codex/install` selects PowerShell or Bash
+from the requesting client's user agent. Update the two static files together
+and verify both fixed-suffix URLs and both extensionless responses.
+
+The installers back up existing configuration before changing managed keys.
+Users must rerun the installer and fully quit/reopen Codex to update an
+existing local configuration; changing the hosted script alone only changes
+future installations.
