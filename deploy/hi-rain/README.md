@@ -53,13 +53,20 @@ URLs, quotas, balances, or usage logs. Those remain production data.
    on the server.
 4. Keep the 1Panel Compose project name, container name, database, ports, and
    mounts unchanged; replace only `RAINAPI_IMAGE`/the image reference.
-5. Apply `apply-production-settings.sql`, then recreate with
-   `docker compose up -d --no-build`.
+5. Preserve current administrator settings during a routine upgrade. Only apply
+   `apply-production-settings.sql` for an explicitly requested configuration
+   reconciliation; it contains a reviewed baseline, not a migration. Recreate
+   with `docker compose up -d --no-build`.
 6. Verify container health, `/api/status`, the public HTTPS endpoint, login,
    user statistics filtering, and database row counts.
 
 Copy `.env.example` to an untracked `.env` only in the deployment environment.
 Never commit the real `SQL_DSN` or channel credentials.
+
+For official New API updates, use the project skill
+`../../.codex/skills/rainapi-upstream-sync/SKILL.md`. The exact merged upstream
+commit and remaining work are recorded in `upstream-sync.json`; release history,
+validation evidence and user-facing changes are in `UPSTREAM_SYNC.md`.
 
 From the repository root, the standard local image build is:
 

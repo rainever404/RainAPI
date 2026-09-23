@@ -1,0 +1,4 @@
+interface:
+  display_name: "RainAPI 官方更新同步"
+  short_description: "合并 New API 官方更新，保留二开功能并追踪验证、发布及后续续跑进度"
+  default_prompt: "使用 $rainapi-upstream-sync 同步官方 New API 更新，保留 RainAPI 定制并记录验证和发布进度。"

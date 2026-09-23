@@ -1,7 +1,10 @@
 param(
-    [string]$ImageTag = 'rainapi:v1.0.0-rc.36-rain.1'
+    [string]$ImageTag = 'rainapi:v1.0.0-rc.40-rain.1',
+    [ValidateSet('', 'builder', 'builder2')]
+    [string]$Target = ''
 )
 
+chcp 65001 > $null
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
 
@@ -24,6 +27,9 @@ foreach ($candidatePort in @(7897, 7890, 7891, 7892, 7893, 7894, 7895, 7896, 789
 }
 
 $buildArguments = @('build', '--pull', '--tag', $ImageTag)
+if ($Target) {
+    $buildArguments += @('--target', $Target)
+}
 if ($null -ne $proxyPort) {
     $proxyUrl = "http://host.docker.internal:$proxyPort"
     $buildArguments += @(

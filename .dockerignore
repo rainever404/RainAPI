@@ -1,5 +1,9 @@
 .github
 .git
+.codex
+.local-tests
+.local-output
+deploy
 *.md
 .vscode
 .gitignore
