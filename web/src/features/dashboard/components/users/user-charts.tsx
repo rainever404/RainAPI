@@ -36,6 +36,7 @@ import type {
   ProcessedUserChartData,
   UserChartsFilters,
 } from '@/features/dashboard/types'
+import { requireServerSuccess } from '@/lib/server-error-message'
 import { getEndOfDay, getRollingDateRange, getStartOfDay } from '@/lib/time'
 import { VCHART_OPTION } from '@/lib/vchart'
 
@@ -121,7 +122,8 @@ export function UserCharts(props: UserChartsProps) {
 
   const { data: userData, isLoading } = useQuery({
     queryKey: ['dashboard', 'user-quota', timeRange],
-    queryFn: () => getUserQuotaDataByUsers(timeRange),
+    queryFn: async () =>
+      requireServerSuccess(await getUserQuotaDataByUsers(timeRange)),
     select: (res) => (res.success ? filterUserStatisticsData(res.data) : []),
     staleTime: 60_000,
   })
