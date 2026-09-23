@@ -6,7 +6,7 @@ description: 同步官方 QuantumNous/new-api 到 RainAPI 二开仓库，保留�
 # RainAPI 上游同步
 
 先读仓库 `AGENTS.md`、`deploy/hi-rain/upstream-sync.json` 和
-`deploy/hi-rain/UPSTREAM_SYNC.md`。前者保存当前进度，后者保存每次同步的验证与发布证据。
+`deploy/hi-rain/UPSTREAM_SYNC.md`。JSON 保存当前进度，Markdown 保存每次同步的验证与发布证据。
 不要仅凭版本标签判断合并进度：以完整 Git SHA 和祖先关系为准。
 
 ## 同步与续跑

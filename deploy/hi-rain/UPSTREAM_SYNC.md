@@ -29,7 +29,7 @@
 已完成：
 
 - 生产镜像构建：`rainapi:v1.0.0-rc.40-rain.1`。
-- 前端 Bun 1.4.0 + Node 22：类型检查通过，166 个官方测试文件共 2096 个测试通过；
+- 前端 Bun 1.4.0 + Node 22.23.2：类型检查通过，166 个官方测试文件共 2096 个测试通过；
   RainAPI 统计测试文件的 4 个测试单独通过，共 2100 个。
 - 本次调整的前端文件 lint / 格式检查通过。
 - 全仓 lint 尚有 182 errors / 66 warnings：官方目标 SHA 的原始 `web/` 独立复现完全相同数量。
@@ -42,7 +42,19 @@ SQLite 3.50.4、MySQL 5.7.44、PostgreSQL 18.1 的 9 条升级路径均已通过
 MySQL/PostgreSQL 同时覆盖独立日志库。SQLite 版本另外用应用相同 Go 驱动执行
 `SELECT sqlite_version()` 核实。
 
-完整 Go 回归及线上发布结果在完成后补充，不以成功编译代替。
+根 Go 模块与独立 relaykit 的 vet、build 和全部测试均通过（Go 1.26.1）。
+根模块测试配置了真实本地 MySQL/PostgreSQL DSN；按包串行，避免共享测试库相互干扰。
+实际执行命令为：
+
+```sh
+go vet ./...
+go build ./...
+go test -p 1 -v ./...
+cd relaykit
+GOWORK=off go vet ./...
+GOWORK=off go build ./...
+GOWORK=off go test ./...
+```
 
 复用验证入口：
 
@@ -67,6 +79,27 @@ Go 测试通过 `127.0.0.1` 访问它们，符合上游禁止远端数据库测�
 前端测试需要 Node 运行时，并挂载根目录 `pkg/billingexpr/testdata` 供前后端共享计费夹具使用；
 仅用 Bun 镜像的兼容运行时会造成测试工具错误，不应据此修改产品逻辑。
 
+### 线上发布结果
+
+- 2026-09-23 10:40（Asia/Shanghai）完成发布并通过健康检查，线上版本为
+  `v1.0.0-rc.40-rain.1`；应用仍由原 1Panel Compose 项目 `new-api` 管理。
+- 本地构建、数据库验证和线上运行使用同一个镜像 ID：
+  `sha256:30ac629e6c9a843dba073a2a9a62b84c5a0249bd944787e3e84b53d61d812c01`。
+- 生产 Compose 只变更镜像；其余字段与发布前一致，实际 `/data`、`/app/logs` 挂载已独立核对。
+- 发布前备份位于 `/opt/1panel/backup/rainapi/upgrade-20260923-upstream-rc40`，
+  包含 Compose、环境文件和 PostgreSQL 自定义格式备份；`pg_restore --list` 检查通过。
+  既有 1Panel 7 天清理任务启用且最近运行成功，未重复创建。
+- 发布瞬间核对用户、令牌、渠道、选项和路由能力的摘要全部一致；用户 9、令牌 17、渠道 4，
+  日志随在线请求正常增长。后续验证临时建立了一个 Preview 令牌，测试结束已撤销。
+- `Codex专用` 的 Sol Chat Completions、`All Model` 的 Astra Chat Completions、
+  `Preview` 的 Astra Responses 流均实际成功；Codex 调用 Astra 返回 `503 model_not_found`，符合限制。
+- 上述三个成功请求各消耗输入 10 / 输出 5 tokens：Sol 扣 35 quota，Astra 各扣 175 quota，
+  与截图标准价格和分组倍率 1 一致。10 个规范模型价格与基准 JSON 相符，全部 25 条显式表达式保留。
+- `/codex/install.ps1`、`/codex/install.sh` 和无后缀入口的 PowerShell/curl 分流逐字匹配仓库脚本，
+  默认 `model` / `review_model` 为 `gpt-6-sol`；公网首页和 `/api/status` 正常。
+- 用户重新登录后，已在 Chrome 验证新版本标识、用户统计图表、14 天/自定义日期切换、
+  6 个可见用户的多选列表，以及系统信息和四个定价分组页面；未通过页面重存生产设置。
+
 ### 认证变更核查依据
 
 本轮合入上游多域名 Passkey、旧 GitHub 绑定迁移等认证修改，核查依据为
@@ -77,6 +110,8 @@ Go 测试通过 `127.0.0.1` 访问它们，符合上游禁止远端数据库测�
 关注身份提供商身份隔离（6.8.1）、服务端会话验证和轮换（7.2.1、7.2.4）、
 会话撤销（7.4.1、7.4.2）、敏感操作重新验证（7.5.1）。
 保留上游失败、过期、重放、验证绕过和绑定迁移回归；不声称全站已经取得 ASVS 合规认证。
+根模块全量测试包含 Passkey 并发完成、挑战隔离、用户验证要求、旧 GitHub 绑定身份凭据检查及迁移等用例，
+均已通过；三个数据库的真实登录与会话请求也通过。线上由用户完成真实登录后检查管理页面。
 
 ### 用户能感知的更新
 

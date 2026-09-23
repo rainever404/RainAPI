@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-23T02:36:50Z",
+  "updated_at": "2026-09-23T02:49:55.0910508Z",
   "upstream_url": "https://github.com/QuantumNous/new-api.git",
   "upstream_branch": "main",
   "previous_upstream_commit": "4fc9d1f1fa77c0cfdd9719cb59ff9ecc9885d66a",
@@ -10,7 +10,7 @@
   "merged_upstream_commits": 120,
   "upstream_release": "v1.0.0-rc.40",
   "commits_after_upstream_release": 3,
-  "stage": "merged_database_validated_backend_running",
+  "stage": "deployed_validated_pending_push",
   "release_version": "v1.0.0-rc.40-rain.1",
   "image": "rainapi:v1.0.0-rc.40-rain.1",
   "image_id": "sha256:30ac629e6c9a843dba073a2a9a62b84c5a0249bd944787e3e84b53d61d812c01",
@@ -19,13 +19,28 @@
     "changed_frontend_lint_and_format": "passed",
     "full_frontend_lint": "upstream baseline: 182 errors and 66 warnings, independently reproduced",
     "database_matrix": "passed: 9 fresh/upgrade cases, SQLite 3.50.4, MySQL 5.7.44, PostgreSQL 18.1",
-    "root_and_relaykit_go": "in_progress"
+    "root_and_relaykit_go": "passed: Go 1.26.1, vet/build/all tests, independent relaykit, real local MySQL/PostgreSQL DSNs",
+    "production_business": "passed: Sol in Codex, Astra in All Model and Preview, Astra denied in Codex, observed charges match prices",
+    "production_browser": "passed: authenticated user statistics, date controls, user selector, system settings and group pricing",
+    "public_installers": "passed: both suffixes and both user-agent routes exactly match repository scripts"
   },
   "deployment": {
-    "status": "pending",
+    "status": "verified",
+    "deployed_at": "2026-09-23T10:40:50.642877+08:00",
+    "health": "healthy",
+    "compose_project": "new-api",
+    "preserved": [
+      "users",
+      "tokens",
+      "channels",
+      "options",
+      "abilities",
+      "compose_settings",
+      "data_mounts"
+    ],
     "backup_path": "/opt/1panel/backup/rainapi/upgrade-20260923-upstream-rc40",
     "backup_retention_days": 7
   },
   "push": "pending",
-  "next_action": "Finish Go regression tests, deploy verified image, verify production, commit and push."
+  "next_action": "Commit release evidence, fast-forward master, push origin/master, then record the verified push and release tag."
 }
