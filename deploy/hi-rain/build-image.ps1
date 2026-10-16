@@ -1,5 +1,5 @@
 param(
-    [string]$ImageTag = 'rainapi:v1.0.0-rc.40-rain.1',
+    [string]$ImageTag = 'rainapi:v1.0.0-rc.40-rain.2',
     [ValidateSet('', 'builder', 'builder2')]
     [string]$Target = ''
 )

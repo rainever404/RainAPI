@@ -87,3 +87,27 @@ The installers back up existing configuration before changing managed keys.
 Users must rerun the installer and fully quit/reopen Codex to update an
 existing local configuration; changing the hosted script alone only changes
 future installations.
+
+## Codex local compaction with historical web search
+
+The Codex subscription backend can return a streamed nested error,
+`response protection is unavailable`, when local compaction replays
+`web_search_call` input without a web-search tool declaration. A successful
+HTTP 200 does not make that stream a successful completion.
+
+The Codex adaptor preserves all input history and, only when the request has
+no declared tools and an automatic, disabled, or unspecified tool choice, adds
+a cached-only `web_search` declaration with `external_web_access: false` and
+sets `tool_choice: "none"`. This repairs historical-item validation without
+authorizing new tool calls or live searches. Existing tool declarations,
+explicit required/named tool choices, other providers, and the native
+`/v1/responses/compact` path are not changed.
+
+The scoped regression suite is `go test ./relay/channel/codex -count=1`.
+
+Validated deployment: `v1.0.0-rc.40-rain.2` on 2026-10-17. The original
+undeclared-search minimal case and an isolated reconstruction of the affected
+chat history both reached `response.completed` after deployment; the latter
+reported 576,497 input tokens and 187 output tokens, with no new tool calls.
+The reconstruction does not modify or prove recovery of the original desktop
+chat itself. No database schema, credentials, or routing settings were changed.

@@ -99,6 +99,32 @@ func (a *Adaptor) ConvertOpenAIResponsesRequest(c *gin.Context, info *relaycommo
 	if isCompact {
 		return request, nil
 	}
+	// Local Codex compaction replays web_search_call history without declaring
+	// tools. The subscription backend rejects that history with "response
+	// protection is unavailable" unless web_search remains declared. Only repair
+	// requests that cannot invoke tools already: keep every history item, disable
+	// external search, and explicitly prohibit all new tool calls.
+	var tools []json.RawMessage
+	toolsAbsent := len(request.Tools) == 0 || (common.Unmarshal(request.Tools, &tools) == nil && len(tools) == 0)
+	var toolChoice string
+	choiceAllowsNoTools := len(request.ToolChoice) == 0 ||
+		(common.Unmarshal(request.ToolChoice, &toolChoice) == nil &&
+			(toolChoice == "" || toolChoice == "auto" || toolChoice == "none"))
+	if toolsAbsent && choiceAllowsNoTools {
+		var input []struct {
+			Type string `json:"type"`
+		}
+		if common.Unmarshal(request.Input, &input) == nil {
+			for _, item := range input {
+				if item.Type == "web_search_call" {
+					request.Tools = json.RawMessage(`[{"type":"web_search","external_web_access":false}]`)
+					request.ToolChoice = json.RawMessage(`"none"`)
+					break
+				}
+			}
+		}
+	}
+
 	// codex: store must be false
 	request.Store = json.RawMessage("false")
 	// rm max_output_tokens
